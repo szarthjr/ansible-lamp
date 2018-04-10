@@ -1,0 +1,61 @@
+---
+- hosts: lampserver
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vars.yml
+
+  pre_tasks:
+    
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      register: output
+      changed_when: output.stdout != ""
+    
+    - name: Update apt cache
+      apt: update_cache=yes cache_valid_time=3600
+
+  handlers:
+    - name: restart apache
+      service: name=apache2 state=restarted
+
+  tasks:
+    - name: Install software apt
+      apt: "name={{ item }} state=present"
+      with_items:
+        - python-apt
+        - python-pycurl
+
+    - name: Add repository for PHP
+      apt_repository: repo='ppa:ondrej/php' update_cache=yes
+
+    - name: Install Apache-MySQL-PHP and dependencies
+      apt: "name={{ item }} state=present" 
+      with_items:
+        - apache2
+        - php7.1-common
+        - php7.1-cli
+        - php7.1-dev
+        - php7.1-gd
+        - php7.1-curl
+        - php7.1-json
+        - php7.1-opcache
+        - php7.1-xml
+        - php7.1-mbstring
+        - php7.1-pdo
+        - php7.1-mysql
+        - php-apcu
+        - libpcre3-dev
+        - libapache2-mod-php7.1
+        - python-mysqldb
+        - mysql-server
+    
+    - name: Disable firewall (dev only)
+      service: name=ufw state=stopped
+
+    - name: Start Services
+      service: "name={{ item }} state=started enabled=yes"
+      with_items:
+        - apache2
+        - mysql
