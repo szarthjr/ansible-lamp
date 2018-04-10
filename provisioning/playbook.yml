@@ -108,3 +108,37 @@
         host: localhost
         state: present
     
+    - name: Download composer
+      get_url:
+        url: https://getcomposer.org/installer
+        dest: /tmp/composer-installer.php
+        mode: 0755
+
+    - name: Run composer
+      command: >
+        php composer-installer.php
+        chdir=/tmp
+        creates=/usr/local/bin/composer
+
+    - name: Move compose
+      shell: >
+        mv /tmp/composer.phar /usr/local/bin/composer
+        creates=/usr/local/bin/composer
+    
+    - name: Check out drush 8.x branch
+      git:
+        repo: https://github.com/drush-ops/drush.git
+        version: 8.x
+        dest: /opt/drush
+
+    - name: Install Drush dependencies
+      shell: >
+        /usr/local/bin/composer install
+        chdir=/opt/drush
+        creates=/opt/drush/vendor/autoload.php
+
+    - name: Create drush bin symbolic link
+      file:
+        src: /opt/drush/drush
+        dest: /usr/local/bin/drush
+        state: link
