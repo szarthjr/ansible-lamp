@@ -85,3 +85,26 @@
         path: "/etc/apache2/sites-enabled/000-default"
         state: absent
       notify: restart apache
+
+    - name: Adjust OpCache Mem
+      lineinfile:
+        dest: "/etc/php/7.1/apache2/conf.d/10-opcache.ini"
+        regexp: "^opcache.memory_consumption"
+        line: "opcache.memory_consumption = 96"
+        state: present
+      notify: restart apache
+
+    - name: Remove the mysql test database
+      mysql_db: db=test state=absent
+
+    - name: Create mysql database
+      mysql_db: "db={{ domain }} state=present" 
+
+    - name: Create a mysql user for Drupal
+      mysql_user:
+        name: "{{ domain }}"
+        password: "{{ mysql_pass }}"
+        priv: "{{ domain }}.*:ALL"
+        host: localhost
+        state: present
+    
