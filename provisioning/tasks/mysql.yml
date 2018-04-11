@@ -1,0 +1,14 @@
+---
+- name: Remove the mysql test database
+  mysql_db: db=test state=absent
+  
+- name: Create mysql database
+  mysql_db: "db={{ domain }} state=present" 
+
+- name: Create a mysql user for Drupal
+  mysql_user:
+    name: "{{ domain }}"
+    password: "{{ mysql_pass }}"
+    priv: "{{ domain }}.*:ALL"
+    host: localhost
+    state: present
